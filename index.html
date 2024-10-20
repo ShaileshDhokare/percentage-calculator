@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Percentage Calculator</title>
+    <link rel="icon" type="image/x-icon" href="icon.png" />
     <script
       src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"
       defer
@@ -16,9 +17,13 @@
       x-init="loadFromLocalStorage()"
       class="bg-white shadow-lg rounded-md p-6 w-full max-w-3xl my-8"
     >
-      <h2 class="text-3xl font-semibold mb-4 text-center">
-        Percentage Calculator
-      </h2>
+      <div class="flex justify-between gap-2 mb-4">
+        <img src="discount.png" height="48" width="48" alt="" />
+        <h2 class="text-3xl font-semibold text-center">
+          Percentage Calculator
+        </h2>
+        <img src="rate.png" height="48" width="48" alt="" />
+      </div>
       <div class="p-3 bg-slate-200 rounded-sm">
         <p class="text-xs">
           Percentage Calculator is a simple, user-friendly web application
@@ -113,7 +118,7 @@
                   <input
                     type="number"
                     x-model="row.percentage"
-                    placeholder="Enter percentage"
+                    placeholder="Pct. %"
                     class="w-full px-2 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     @keyup="saveToLocalStorage()"
                     step="0.25"
