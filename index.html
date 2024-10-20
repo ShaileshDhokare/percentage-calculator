@@ -14,9 +14,20 @@
     <div
       x-data="calculatorApp()"
       x-init="loadFromLocalStorage()"
-      class="bg-white shadow-lg rounded-lg p-6 w-full max-w-3xl"
+      class="bg-white shadow-lg rounded-md p-6 w-full max-w-3xl my-8"
     >
-      <h2 class="text-2xl font-bold mb-4 text-center">Percentage Calculator</h2>
+      <h2 class="text-3xl font-semibold mb-4 text-center">
+        Percentage Calculator
+      </h2>
+      <div class="p-3 bg-slate-200 rounded-sm">
+        <p class="text-xs">
+          Percentage Calculator is a simple, user-friendly web application
+          designed to calculate percentage adjustments for multiple entities.
+          Users can input a base number and apply different percentage values
+          (both positive and negative) to calculate the result after applying
+          the percentage increase or decrease.
+        </p>
+      </div>
 
       <!-- List of Entities with Radio Buttons -->
       <div class="p-3 my-2 border rounded-sm bg-slate-50">
@@ -66,7 +77,7 @@
       </div>
 
       <!-- Calculator for the Selected Entity -->
-      <div x-show="entities.length > 0">
+      <div x-show="entities.length > 0" class="mb-4">
         <div class="mb-4">
           <label for="inputValue" class="block text-gray-700 font-medium mb-2"
             >Enter Value for
@@ -89,7 +100,7 @@
             <tr class="bg-gray-200">
               <th class="border px-4 py-2 bg-slate-100">Percentage(%)</th>
               <th class="border px-4 py-2 bg-slate-100">Quantity</th>
-              <th class="border px-4 py-2 bg-slate-100">Calculated Value</th>
+              <th class="border px-4 py-2 bg-slate-100">Result Value</th>
             </tr>
           </thead>
           <tbody>
@@ -125,22 +136,76 @@
             </template>
           </tbody>
         </table>
-
-        <button
-          @click="addRow(selectedEntityIndex)"
-          class="mt-4 bg-blue-700 text-white py-2 px-4 rounded-sm hover:bg-blue-800"
+        <div
+          class="flex justify-between"
+          x-show="entities[selectedEntityIndex].inputValue"
         >
-          Add Row
-        </button>
+          <button
+            @click="addRow(selectedEntityIndex)"
+            class="mt-4 bg-blue-700 text-white py-2 px-4 rounded-sm hover:bg-blue-800"
+          >
+            Add Row
+          </button>
+          <button
+            @click="clearAllRows(selectedEntityIndex)"
+            class="mt-4 bg-red-700 text-white py-2 px-4 rounded-sm hover:bg-red-800"
+          >
+            Clear All Rows
+          </button>
+        </div>
       </div>
+      <div class="mb-4 p-3 border rounded-sm bg-slate-50">
+        <label class="block text-xl mb-2 font-medium">Generate Rows:</label>
+        <div class="grid grid-cols-4 gap-2">
+          <input
+            type="number"
+            x-model="bulkData.start"
+            placeholder="Start"
+            step="0.25"
+            class="w-full px-2 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          <input
+            type="number"
+            x-model="bulkData.step"
+            placeholder="Step"
+            step="0.05"
+            class="w-full px-2 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          <input
+            type="number"
+            x-model="bulkData.quantity"
+            placeholder="Quantity"
+            class="w-full px-2 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          <button
+            @click="generateBulkData(selectedEntityIndex)"
+            class="bg-blue-700 text-white py-2 px-4 rounded-sm hover:bg-blue-800"
+          >
+            Generate
+          </button>
+        </div>
+      </div>
+      <footer class="mt-auto text-center text-gray-500 py-4">
+        <p class="text-sm">
+          © <span x-text="year"></span> Percentage Calculator. All rights
+          reserved.
+        </p>
+        <p class="text-sm">Developed by Shailesh Dhokare.</p>
+      </footer>
     </div>
 
     <script>
       function calculatorApp() {
         return {
+          year: new Date().getFullYear(),
           entities: [],
           selectedEntityIndex: 0,
           newEntityName: '',
+          bulkData: {
+            start: null,
+            step: null,
+            quantity: null,
+          },
 
           // Load saved data from localStorage on init
           loadFromLocalStorage() {
@@ -192,7 +257,6 @@
               percentage: null,
               quantity: null,
             });
-            this.saveToLocalStorage();
           },
 
           // Calculate the percentage for a given value and percentage
@@ -201,6 +265,32 @@
               parseFloat(inputValue) +
               parseFloat(((inputValue * percentage) / 100).toFixed(2))
             );
+          },
+
+          // Generate bulk rows
+          generateBulkData(selectedEntityIndex) {
+            let percentage = this.bulkData.start;
+            for (let index = 0; index < this.bulkData.quantity; index++) {
+              this.entities[selectedEntityIndex].rows.push({
+                percentage,
+                quantity: null,
+              });
+              percentage = (
+                parseFloat(percentage) + parseFloat(this.bulkData.step)
+              ).toFixed(2);
+            }
+            this.saveToLocalStorage();
+            this.bulkData = {
+              start: null,
+              step: null,
+              quantity: null,
+            };
+          },
+
+          // Clear all rows
+          clearAllRows(selectedEntityIndex) {
+            this.entities[selectedEntityIndex].rows = [];
+            this.saveToLocalStorage();
           },
         };
       }
