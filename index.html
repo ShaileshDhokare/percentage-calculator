@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Percentage Calculator</title>
+    <script
+      src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"
+      defer
+    ></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="bg-gray-100 flex items-center justify-center min-h-screen">
+    <div
+      x-data="calculatorApp()"
+      x-init="loadFromLocalStorage()"
+      class="bg-white shadow-lg rounded-lg p-6 w-full max-w-3xl"
+    >
+      <h2 class="text-2xl font-bold mb-4 text-center">Percentage Calculator</h2>
+
+      <!-- List of Entities with Radio Buttons -->
+      <div class="p-3 my-2 border rounded-sm bg-slate-50">
+        <div class="mb-4">
+          <label class="block text-xl mb-2 font-medium">Entities:</label>
+          <div class="grid grid-cols-2 gap-4">
+            <template x-for="(entity, index) in entities" :key="index">
+              <div class="flex items-center">
+                <input
+                  type="radio"
+                  :id="'entity-' + index"
+                  x-model="selectedEntityIndex"
+                  :value="index"
+                  class="mr-2 form-radio h-6 w-6 text-blue-800 border-gray-500"
+                />
+                <label
+                  :for="'entity-' + index"
+                  class="mr-2 text-lg font-medium text-gray-700"
+                  x-text="entity.name"
+                ></label>
+              </div>
+            </template>
+          </div>
+        </div>
+
+        <!-- Input Group to Add New Entity -->
+        <div class="mb-4 relative w-full">
+          <input
+            type="text"
+            x-model="newEntityName"
+            placeholder="Enter entity name"
+            class="block w-full z-20 p-2 text-sm border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          <button
+            @click="addEntity()"
+            class="absolute top-0 end-0 bg-blue-700 text-sm h-full text-white p-2 rounded-r-sm hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-700"
+          >
+            Add
+          </button>
+        </div>
+        <button
+          @click="deleteEntity(selectedEntityIndex)"
+          class="text-white bg-red-700 hover:bg-red-800 rounded-sm px-3 py-1 text-center items-center"
+        >
+          Delete Selected Entity
+        </button>
+      </div>
+
+      <!-- Calculator for the Selected Entity -->
+      <div x-show="entities.length > 0">
+        <div class="mb-4">
+          <label for="inputValue" class="block text-gray-700 font-medium mb-2"
+            >Enter Value for
+            <span x-text="entities[selectedEntityIndex].name"></span>:</label
+          >
+          <input
+            type="number"
+            x-model="entities[selectedEntityIndex].inputValue"
+            id="inputValue"
+            placeholder="Enter a value"
+            class="w-full px-4 py-2 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+
+        <table
+          class="w-full table-auto border-collapse"
+          x-show="entities[selectedEntityIndex].inputValue"
+        >
+          <thead>
+            <tr class="bg-gray-200">
+              <th class="border px-4 py-2 bg-slate-100">Percentage(%)</th>
+              <th class="border px-4 py-2 bg-slate-100">Quantity</th>
+              <th class="border px-4 py-2 bg-slate-100">Calculated Value</th>
+            </tr>
+          </thead>
+          <tbody>
+            <template
+              x-for="(row, index) in entities[selectedEntityIndex].rows"
+              :key="index"
+            >
+              <tr>
+                <td class="border text-center">
+                  <input
+                    type="number"
+                    x-model="row.percentage"
+                    placeholder="Enter percentage"
+                    class="w-full px-2 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    @keyup="saveToLocalStorage()"
+                    step="0.25"
+                  />
+                </td>
+                <td class="border text-center">
+                  <input
+                    type="number"
+                    x-model="row.quantity"
+                    placeholder="Enter quantity"
+                    class="w-full px-2 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    @keyup="saveToLocalStorage()"
+                  />
+                </td>
+                <td
+                  class="border text-center"
+                  x-text="row.percentage && calculatePercentage(entities[selectedEntityIndex].inputValue, row.percentage)"
+                ></td>
+              </tr>
+            </template>
+          </tbody>
+        </table>
+
+        <button
+          @click="addRow(selectedEntityIndex)"
+          class="mt-4 bg-blue-700 text-white py-2 px-4 rounded-sm hover:bg-blue-800"
+        >
+          Add Row
+        </button>
+      </div>
+    </div>
+
+    <script>
+      function calculatorApp() {
+        return {
+          entities: [],
+          selectedEntityIndex: 0,
+          newEntityName: '',
+
+          // Load saved data from localStorage on init
+          loadFromLocalStorage() {
+            const storedEntities = JSON.parse(localStorage.getItem('entities'));
+            if (storedEntities) {
+              this.entities = storedEntities;
+            }
+          },
+
+          // Save data to localStorage
+          saveToLocalStorage() {
+            localStorage.setItem('entities', JSON.stringify(this.entities));
+          },
+
+          // Add a new entity with custom name
+          addEntity() {
+            if (this.newEntityName.trim() !== '') {
+              this.entities.push({
+                name: this.newEntityName,
+                inputValue: null,
+                rows: [],
+              });
+              this.selectedEntityIndex = this.entities.length - 1;
+              this.newEntityName = '';
+              this.addRow(this.selectedEntityIndex);
+              this.saveToLocalStorage();
+            } else {
+              alert('Please enter a valid entity name.');
+            }
+          },
+
+          // Delete an entity
+          deleteEntity(index) {
+            const confirmDelete = confirm('Do you want to delete the Entity.');
+            if (confirmDelete) {
+              if (this.entities.length > 1) {
+                this.entities.splice(index, 1);
+                this.selectedEntityIndex = 0;
+                this.saveToLocalStorage();
+              } else {
+                alert('At least one entity must exist!');
+              }
+            }
+          },
+
+          // Add a row for the selected entity
+          addRow(entityIndex) {
+            this.entities[entityIndex].rows.push({
+              percentage: null,
+              quantity: null,
+            });
+            this.saveToLocalStorage();
+          },
+
+          // Calculate the percentage for a given value and percentage
+          calculatePercentage(inputValue, percentage) {
+            return (
+              parseFloat(inputValue) +
+              parseFloat(((inputValue * percentage) / 100).toFixed(2))
+            );
+          },
+        };
+      }
+    </script>
+  </body>
+</html>
