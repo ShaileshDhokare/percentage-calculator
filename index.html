@@ -17,12 +17,12 @@
       x-init="loadFromLocalStorage()"
       class="bg-white shadow-lg rounded-md p-6 w-full max-w-3xl my-8"
     >
-      <div class="flex justify-between gap-2 mb-4">
-        <img src="discount.png" height="48" width="48" alt="" />
+      <div class="flex justify-around items-center gap-2 mb-4">
+        <img src="discount.png" class="max-w-10 max-h-10" alt="" />
         <h2 class="text-3xl font-semibold text-center">
           Percentage Calculator
         </h2>
-        <img src="rate.png" height="48" width="48" alt="" />
+        <img src="rate.png" class="max-w-10 max-h-10" alt="" />
       </div>
       <div class="p-3 bg-slate-200 rounded-sm">
         <p class="text-xs">
@@ -83,7 +83,35 @@
 
       <!-- Calculator for the Selected Entity -->
       <div x-show="entities.length > 0" class="mb-4">
-        <div class="mb-4">
+        <div class="mb-3">
+          <label for="athValue" class="block text-gray-700 font-medium mb-2"
+            >Enter ATH Value
+            <span x-text="entities[selectedEntityIndex].name"></span>:</label
+          >
+          <input
+            type="number"
+            x-model="entities[selectedEntityIndex].athValue"
+            id="athValue"
+            step="0.25"
+            placeholder="Enter ATH Value"
+            class="w-full px-4 py-2 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+        <div class="mb-3">
+          <label for="w52Value" class="block text-gray-700 font-medium mb-2"
+            >Enter 52WH Value
+            <span x-text="entities[selectedEntityIndex].name"></span>:</label
+          >
+          <input
+            type="number"
+            x-model="entities[selectedEntityIndex].w52Value"
+            id="w52Value"
+            step="0.25"
+            placeholder="Enter 52WH Value"
+            class="w-full px-4 py-2 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+        <div class="mb-3">
           <label for="inputValue" class="block text-gray-700 font-medium mb-2"
             >Enter Value for
             <span x-text="entities[selectedEntityIndex].name"></span>:</label
@@ -92,20 +120,47 @@
             type="number"
             x-model="entities[selectedEntityIndex].inputValue"
             id="inputValue"
+            step="0.25"
             placeholder="Enter a value"
             class="w-full px-4 py-2 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
-
+        <div
+          class="mb-4 grid sm:grid-cols-2 gap-4 text-center"
+          x-show="entities[selectedEntityIndex].inputValue"
+        >
+          <div class="border rounded-sm bg-slate-100 p-2">
+            <span class="block text-gray-700 text-sm mb-2 font-semibold"
+              >Diff. with ATH</span
+            >
+            <span
+              :class="{ 'text-green-700': getAthDiff() >= 0, 'text-red-700': getAthDiff() < 0 }"
+              class="block text-blue-700 font-bold text-lg"
+              x-text="getAthDiff() + '%'"
+            ></span>
+          </div>
+          <div class="border rounded-sm bg-slate-100 p-2">
+            <span class="block text-gray-700 text-sm mb-2 font-semibold"
+              >Diff. with 52WH</span
+            >
+            <span
+              :class="{ 'text-green-700': getW52Diff() >= 0, 'text-red-700': getW52Diff() < 0 }"
+              class="block text-blue-700 font-bold text-lg"
+              x-text="getW52Diff() + '%'"
+            />
+          </div>
+        </div>
         <table
           class="w-full table-auto border-collapse"
           x-show="entities[selectedEntityIndex].inputValue"
         >
           <thead>
             <tr class="bg-gray-200">
-              <th class="border px-2 py-2 bg-slate-100">Pct.(%)</th>
-              <th class="border px-2 py-2 bg-slate-100">Quant.</th>
+              <th class="border px-2 py-2 bg-slate-100 max-w-20">Pct.(%)</th>
+              <th class="border px-2 py-2 bg-slate-100 max-w-16">Quant.</th>
               <th class="border px-2 py-2 bg-slate-100">Result Value</th>
+              <th class="border px-2 py-2 bg-slate-100">ATH Diff.(%)</th>
+              <th class="border px-2 py-2 bg-slate-100">52WH Diff.(%)</th>
             </tr>
           </thead>
           <tbody>
@@ -114,28 +169,39 @@
               :key="index"
             >
               <tr>
-                <td class="border text-center">
+                <td class="border text-center max-w-20">
                   <input
                     type="number"
                     x-model="row.percentage"
                     placeholder="Pct. %"
-                    class="w-full px-2 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    :class="{'text-red-700': row.percentage < 0 }"
+                    class="w-full text-green-700 font-semibold px-2 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     @keyup="saveToLocalStorage()"
                     step="0.25"
                   />
                 </td>
-                <td class="border text-center">
+                <td class="border text-center max-w-16">
                   <input
                     type="number"
                     x-model="row.quantity"
-                    placeholder="Quant."
                     class="w-full px-2 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     @keyup="saveToLocalStorage()"
                   />
                 </td>
                 <td
-                  class="border text-center"
+                  :class="{ 'text-red-700': row.percentage < 0 }"
+                  class="border text-center font-semibold text-green-700"
                   x-text="row.percentage && calculatePercentage(entities[selectedEntityIndex].inputValue, row.percentage)"
+                ></td>
+                <td
+                  :class="{ 'text-red-700': getAthDiff(calculatePercentage(entities[selectedEntityIndex].inputValue, row.percentage)) < 0 }"
+                  class="border text-center font-semibold text-green-700"
+                  x-text="getAthDiff(calculatePercentage(entities[selectedEntityIndex].inputValue, row.percentage))"
+                ></td>
+                <td
+                  :class="{ 'text-red-700': getW52Diff(calculatePercentage(entities[selectedEntityIndex].inputValue, row.percentage)) < 0 }"
+                  class="border text-center font-semibold text-green-700"
+                  x-text="getW52Diff(calculatePercentage(entities[selectedEntityIndex].inputValue, row.percentage))"
                 ></td>
               </tr>
             </template>
@@ -230,6 +296,8 @@
             if (this.newEntityName.trim() !== '') {
               this.entities.push({
                 name: this.newEntityName,
+                athValue: null,
+                w52Value: null,
                 inputValue: null,
                 rows: [],
               });
@@ -296,6 +364,31 @@
           clearAllRows(selectedEntityIndex) {
             this.entities[selectedEntityIndex].rows = [];
             this.saveToLocalStorage();
+          },
+
+          // Get percentage difference
+          getPctDiff(refValue, inpValue) {
+            if (refValue === 0) {
+              return null;
+            }
+            const difference = parseFloat(inpValue) - parseFloat(refValue);
+            const percentageDifference = (difference / refValue) * 100;
+            this.saveToLocalStorage();
+            return percentageDifference.toFixed(2);
+          },
+
+          // get ATH difference
+          getAthDiff(value) {
+            const { athValue, inputValue } =
+              this.entities[this.selectedEntityIndex];
+            return this.getPctDiff(athValue, value || inputValue);
+          },
+
+          // get W52 difference
+          getW52Diff(value) {
+            const { w52Value, inputValue } =
+              this.entities[this.selectedEntityIndex];
+            return this.getPctDiff(w52Value, value || inputValue);
           },
         };
       }
